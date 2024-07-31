@@ -37,6 +37,8 @@
   },
   "license": "MIT",
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.1"
+    "@types/fluent-ffmpeg": "^2.1.25",
+    "electron-squirrel-startup": "^1.0.1",
+    "fluent-ffmpeg": "^2.1.3"
   }
 }

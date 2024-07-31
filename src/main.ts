@@ -1,5 +1,8 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog } from 'electron';
 import path from 'path';
+import fs from 'fs'
+import ffmpeg from 'fluent-ffmpeg'
+
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require('electron-squirrel-startup')) {
@@ -13,6 +16,8 @@ const createWindow = () => {
     height: 600,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false
     },
   });
 
@@ -23,9 +28,83 @@ const createWindow = () => {
     mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
   }
 
+  ipcMain.handle('open-file-dialog', async () => {
+    const result = await dialog.showOpenDialog(mainWindow, {
+      properties: ['openFile'],
+      filters: [{ name: 'Videos', extensions: ['mp4', 'avi', 'mov'] }]
+    })
+
+    if (!result.canceled && result.filePaths.length > 0) {
+      return result.filePaths[0]
+    }
+    return null
+  })
+
+  ipcMain.handle('extract-frames', async (event, videoPath) => {
+    const framesDir = path.join(app.getPath('temp'), 'extracted-frames')
+    await ensureDirectoryExists(framesDir)
+    await extractFrames(videoPath, framesDir)
+    return framesDir
+  })
+
+  ipcMain.handle('get-frame-files', async (event, framesDir) => {
+    return await getFrameFiles(framesDir)
+  })
+
+  ipcMain.handle('get-frame-data', async (event, framePath) => {
+    return await getFrameData(framePath)
+  })
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  //  mainWindow.webContents.openDevTools();
 };
+
+async function getFrameFiles(framesDir: string): Promise<string[]> {
+  return new Promise((resolve, reject) => {
+    fs.readdir(framesDir, (err, files) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve(files.filter(file => file.endsWith('.png')))
+      }
+    })
+  })
+}
+
+async function getFrameData(framePath: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    fs.readFile(framePath, (err, data) => {
+      if (err) {
+        reject(err)
+      } else {
+        const base64Data = data.toString('base64')
+        resolve(`data:image/png;base64,${base64Data}`)
+      }
+    })
+  })
+}
+
+async function ensureDirectoryExists(dirPath: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    fs.mkdir(dirPath, { recursive: true }, (err) => {
+      if (err) {
+        reject(err)
+      } else {
+        resolve()
+      }
+    })
+  })
+}
+
+async function extractFrames(videoPath: string, outputDir: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    console.log("Will handle: ", videoPath)
+    ffmpeg(videoPath, {"logger": console})
+      .on('end', () => resolve())
+      .on('error', (err) => reject(err))
+      .output(`${outputDir}/frame-%d.png`)
+      .run()
+  })
+}
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
