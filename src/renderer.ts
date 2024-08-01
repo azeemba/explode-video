@@ -27,16 +27,18 @@
  */
 
 // import './index.css';
-const selectVideoBtn = document.getElementById('selectVideo') as HTMLButtonElement;
-const frameDisplay = document.getElementById('frameDisplay') as HTMLDivElement;
-const frameSlider = document.getElementById('frameSlider') as HTMLInputElement;
-const frameNumber = document.getElementById('frameNumber') as HTMLInputElement;
-const totalFrames = document.getElementById('totalFrames') as HTMLSpanElement;
+const selectVideoBtn = document.getElementById(
+  "selectVideo"
+) as HTMLButtonElement;
+const frameDisplay = document.getElementById("frameDisplay") as HTMLDivElement;
+const frameSlider = document.getElementById("frameSlider") as HTMLInputElement;
+const frameNumber = document.getElementById("frameNumber") as HTMLInputElement;
+const totalFrames = document.getElementById("totalFrames") as HTMLSpanElement;
 
 let currentFrames: string[] = [];
 let currentFrameIndex = 1;
 
-selectVideoBtn.addEventListener('click', async () => {
+selectVideoBtn.addEventListener("click", async () => {
   const videoPath = await window.electronAPI.openFileDialog();
   if (videoPath) {
     const framesDir = await window.electronAPI.extractFrames(videoPath);
@@ -45,40 +47,43 @@ selectVideoBtn.addEventListener('click', async () => {
 });
 
 async function loadFrames(framesDir: string) {
-  frameDisplay.innerHTML = '';
+  frameDisplay.innerHTML = "";
   const frameFiles = await window.electronAPI.getFrameFiles(framesDir);
-  currentFrames = frameFiles.map(file => `${framesDir}/${file}`);
-  
+  currentFrames = frameFiles.map((file) => `${framesDir}/${file}`);
+
   updateSliderAndInput(currentFrames.length);
   await displayFrame(1);
 
-  frameSlider.addEventListener('input', async () => {
+  frameSlider.addEventListener("input", async () => {
     currentFrameIndex = parseInt(frameSlider.value);
     await displayFrame(currentFrameIndex);
     frameNumber.value = currentFrameIndex.toString();
   });
 
-  frameNumber.addEventListener('change', async () => {
-    currentFrameIndex = Math.max(1, Math.min(parseInt(frameNumber.value), currentFrames.length));
+  frameNumber.addEventListener("change", async () => {
+    currentFrameIndex = Math.max(
+      1,
+      Math.min(parseInt(frameNumber.value), currentFrames.length)
+    );
     await displayFrame(currentFrameIndex);
     frameSlider.value = currentFrameIndex.toString();
     frameNumber.value = currentFrameIndex.toString();
   });
 
   // Add keyboard event listener
-  document.addEventListener('keydown', handleKeyPress);
+  document.addEventListener("keydown", handleKeyPress);
 }
 
 async function displayFrame(frameIndex: number) {
-  console.log("Will load: ", frameIndex)
+  console.log("Will load: ", frameIndex);
   if (frameIndex < 1 || frameIndex > currentFrames.length) return;
-  
+
   const framePath = currentFrames[frameIndex - 1];
-  console.log("Will load: ", framePath)
+  console.log("Will load: ", framePath);
   const frameData = await window.electronAPI.getFrameData(framePath);
-  
-  frameDisplay.innerHTML = '';
-  const img = document.createElement('img');
+
+  frameDisplay.innerHTML = "";
+  const img = document.createElement("img");
   img.src = frameData;
   frameDisplay.appendChild(img);
 
@@ -89,25 +94,28 @@ async function displayFrame(frameIndex: number) {
 
 function updateSliderAndInput(totalFrameCount: number) {
   frameSlider.max = totalFrameCount.toString();
-  frameSlider.value = '1';
+  frameSlider.value = "1";
   frameNumber.max = totalFrameCount.toString();
-  frameNumber.value = '1';
+  frameNumber.value = "1";
   totalFrames.textContent = `/ ${totalFrameCount}`;
 }
 
 function handleKeyPress(event: KeyboardEvent) {
   switch (event.key) {
-    case 'ArrowLeft':
+    case "ArrowLeft":
       navigateFrames(-1);
       break;
-    case 'ArrowRight':
+    case "ArrowRight":
       navigateFrames(1);
       break;
   }
 }
 
 async function navigateFrames(direction: number) {
-  const newIndex = Math.max(1, Math.min(currentFrameIndex + direction, currentFrames.length));
+  const newIndex = Math.max(
+    1,
+    Math.min(currentFrameIndex + direction, currentFrames.length)
+  );
   if (newIndex !== currentFrameIndex) {
     await displayFrame(newIndex);
   }

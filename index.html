@@ -1,61 +1,70 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="UTF-8" />
-    <title>Video Frame Extractor</title>
-    <style>
-      body, html {
-        margin: 0;
-        padding: 0;
-        height: 100%;
-        font-family: Arial, sans-serif;
-      }
-      body {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 20px;
-        box-sizing: border-box;
-        background-color: rgb(39, 39, 39);
-        color: rgb(228, 231, 238)
-      }
-      #frameDisplay {
-        flex-grow: 1;
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin: 20px 0;
-        overflow: hidden;
-      }
-      #frameDisplay img {
-        max-width: 100%;
-        max-height: 100%;
-        object-fit: contain;
-      }
-      #controls {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-top: 20px;
-        width: 100%;
-        justify-content: center;
-      }
-      #frameSlider {
-        flex-grow: 1;
-        max-width: 500px;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Video Frame Extractor</h1>
-    <button id="selectVideo">Select Video</button>
-    <div id="frameDisplay"></div>
-    <div id="controls">
-      <input type="range" id="frameSlider" min="1" max="1" value="1">
-      <input type="number" id="frameNumber" min="1" max="1" value="1">
-      <span id="totalFrames">/ 1</span>
-    </div>
-    <script src="src/renderer.ts"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Video Frame Extractor</title>
+  <style>
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      box-sizing: border-box;
+      background-color: rgb(39, 39, 39);
+      color: rgb(228, 231, 238)
+    }
+
+    #frameDisplay {
+      flex-grow: 1;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 20px 0;
+      overflow: hidden;
+    }
+
+    #frameDisplay img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    #controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 20px;
+      width: 100%;
+      justify-content: center;
+    }
+
+    #frameSlider {
+      flex-grow: 1;
+      max-width: 500px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Video Frame Extractor</h1>
+  <button id="selectVideo">Select Video</button>
+  <div id="frameDisplay"></div>
+  <div id="controls">
+    <input type="range" id="frameSlider" min="1" max="1" value="1">
+    <input type="number" id="frameNumber" min="1" max="1" value="1">
+    <span id="totalFrames">/ 1</span>
+  </div>
+  <script src="src/renderer.ts"></script>
+</body>
+
 </html>
