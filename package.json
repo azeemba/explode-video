@@ -2,7 +2,7 @@
   "name": "explode-video",
   "productName": "explode-video",
   "version": "1.0.0",
-  "description": "My Electron application description",
+  "description": "Electron app to explode videos into frames to make it easy to scrub frame by frame.",
   "main": ".vite/build/main.js",
   "scripts": {
     "start": "electron-forge start",
