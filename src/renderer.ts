@@ -34,6 +34,17 @@ const frameDisplay = document.getElementById("frameDisplay") as HTMLDivElement;
 const frameSlider = document.getElementById("frameSlider") as HTMLInputElement;
 const frameNumber = document.getElementById("frameNumber") as HTMLInputElement;
 const totalFrames = document.getElementById("totalFrames") as HTMLSpanElement;
+const overlay = document.getElementById("overlay") as HTMLDivElement;
+
+function showOverlay() {
+  overlay.style.display = "flex";
+  console.log(overlay, overlay.style)
+}
+
+function hideOverlay() {
+  overlay.style.display = "none";
+  console.log(overlay, overlay.style)
+}
 
 let currentFrames: string[] = [];
 let currentFrameIndex = 1;
@@ -41,8 +52,10 @@ let currentFrameIndex = 1;
 selectVideoBtn.addEventListener("click", async () => {
   const videoPath = await window.electronAPI.openFileDialog();
   if (videoPath) {
+    showOverlay();
     const framesDir = await window.electronAPI.extractFrames(videoPath);
     await loadFrames(framesDir);
+    hideOverlay();
   }
 });
 
