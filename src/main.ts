@@ -12,14 +12,15 @@ if (require('electron-squirrel-startup')) {
 const createWindow = () => {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1080,
+    height: 800,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false
     },
   });
+  mainWindow.removeMenu();
 
   // and load the index.html of the app.
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
@@ -42,6 +43,7 @@ const createWindow = () => {
 
   ipcMain.handle('extract-frames', async (event, videoPath) => {
     const framesDir = path.join(app.getPath('temp'), 'extracted-frames')
+    deleteDirectory(framesDir);
     await ensureDirectoryExists(framesDir)
     await extractFrames(videoPath, framesDir)
     return framesDir
@@ -64,7 +66,11 @@ async function getFrameFiles(framesDir: string): Promise<string[]> {
       if (err) {
         reject(err)
       } else {
-        resolve(files.filter(file => file.endsWith('.png')))
+        resolve(files.filter(file => file.endsWith('.png')).toSorted((a, b) => {
+          const num_a = a.slice(6, -4)
+          const num_b = b.slice(6, -4)
+          return parseInt(num_a) - parseInt(num_b)
+        }))
       }
     })
   })
@@ -83,6 +89,14 @@ async function getFrameData(framePath: string): Promise<string> {
   })
 }
 
+function deleteDirectory(dirPath: string)
+{
+  if (fs.existsSync(dirPath))
+  {
+    fs.rmSync(dirPath, {"recursive": true})
+  }
+}
+
 async function ensureDirectoryExists(dirPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
     fs.mkdir(dirPath, { recursive: true }, (err) => {
@@ -98,9 +112,11 @@ async function ensureDirectoryExists(dirPath: string): Promise<void> {
 async function extractFrames(videoPath: string, outputDir: string): Promise<void> {
   return new Promise((resolve, reject) => {
     console.log("Will handle: ", videoPath)
-    ffmpeg(videoPath, {"logger": console})
+    ffmpeg(videoPath)
       .on('end', () => resolve())
       .on('error', (err) => reject(err))
+      .on('progress', (p) => console.log(p))
+      .size('800x?')
       .output(`${outputDir}/frame-%d.png`)
       .run()
   })
@@ -116,6 +132,8 @@ app.on('ready', createWindow);
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
+    const framesDir = path.join(app.getPath('temp'), 'extracted-frames')
+    deleteDirectory(framesDir);
     app.quit();
   }
 });

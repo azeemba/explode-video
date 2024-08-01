@@ -27,33 +27,88 @@
  */
 
 // import './index.css';
+const selectVideoBtn = document.getElementById('selectVideo') as HTMLButtonElement;
+const frameDisplay = document.getElementById('frameDisplay') as HTMLDivElement;
+const frameSlider = document.getElementById('frameSlider') as HTMLInputElement;
+const frameNumber = document.getElementById('frameNumber') as HTMLInputElement;
+const totalFrames = document.getElementById('totalFrames') as HTMLSpanElement;
 
-console.log('👋 This message is being logged by "renderer.ts", included via Vite');
-
-const selectVideoBtn = document.getElementById('selectVideo') as HTMLButtonElement
-const frameContainer = document.getElementById('frameContainer') as HTMLDivElement
+let currentFrames: string[] = [];
+let currentFrameIndex = 1;
 
 selectVideoBtn.addEventListener('click', async () => {
-  const videoPath = await window.electronAPI.openFileDialog()
+  const videoPath = await window.electronAPI.openFileDialog();
   if (videoPath) {
-    const framesDir = await window.electronAPI.extractFrames(videoPath)
-    await displayFrames(framesDir)
+    const framesDir = await window.electronAPI.extractFrames(videoPath);
+    await loadFrames(framesDir);
   }
-})
+});
 
-async function displayFrames(framesDir: string) {
-  frameContainer.innerHTML = ''
-  const frameFiles = await window.electronAPI.getFrameFiles(framesDir)
+async function loadFrames(framesDir: string) {
+  frameDisplay.innerHTML = '';
+  const frameFiles = await window.electronAPI.getFrameFiles(framesDir);
+  currentFrames = frameFiles.map(file => `${framesDir}/${file}`);
   
-  for (const file of frameFiles) {
-    const framePath = `${framesDir}/${file}`
-    const frameData = await window.electronAPI.getFrameData(framePath)
-    
-    const img = document.createElement('img')
-    img.src = frameData
-    img.style.width = '100px'
-    img.style.height = 'auto'
-    img.style.margin = '5px'
-    frameContainer.appendChild(img)
+  updateSliderAndInput(currentFrames.length);
+  await displayFrame(1);
+
+  frameSlider.addEventListener('input', async () => {
+    currentFrameIndex = parseInt(frameSlider.value);
+    await displayFrame(currentFrameIndex);
+    frameNumber.value = currentFrameIndex.toString();
+  });
+
+  frameNumber.addEventListener('change', async () => {
+    currentFrameIndex = Math.max(1, Math.min(parseInt(frameNumber.value), currentFrames.length));
+    await displayFrame(currentFrameIndex);
+    frameSlider.value = currentFrameIndex.toString();
+    frameNumber.value = currentFrameIndex.toString();
+  });
+
+  // Add keyboard event listener
+  document.addEventListener('keydown', handleKeyPress);
+}
+
+async function displayFrame(frameIndex: number) {
+  console.log("Will load: ", frameIndex)
+  if (frameIndex < 1 || frameIndex > currentFrames.length) return;
+  
+  const framePath = currentFrames[frameIndex - 1];
+  console.log("Will load: ", framePath)
+  const frameData = await window.electronAPI.getFrameData(framePath);
+  
+  frameDisplay.innerHTML = '';
+  const img = document.createElement('img');
+  img.src = frameData;
+  frameDisplay.appendChild(img);
+
+  currentFrameIndex = frameIndex;
+  frameSlider.value = frameIndex.toString();
+  frameNumber.value = frameIndex.toString();
+}
+
+function updateSliderAndInput(totalFrameCount: number) {
+  frameSlider.max = totalFrameCount.toString();
+  frameSlider.value = '1';
+  frameNumber.max = totalFrameCount.toString();
+  frameNumber.value = '1';
+  totalFrames.textContent = `/ ${totalFrameCount}`;
+}
+
+function handleKeyPress(event: KeyboardEvent) {
+  switch (event.key) {
+    case 'ArrowLeft':
+      navigateFrames(-1);
+      break;
+    case 'ArrowRight':
+      navigateFrames(1);
+      break;
+  }
+}
+
+async function navigateFrames(direction: number) {
+  const newIndex = Math.max(1, Math.min(currentFrameIndex + direction, currentFrames.length));
+  if (newIndex !== currentFrameIndex) {
+    await displayFrame(newIndex);
   }
 }
